@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "nebpay": "^0.0.5",
-    "vue": "^2.5.2"
+    "nebulas": "^0.4.8",
+    "vue": "^2.5.2",
+    "vuetify": "^1.0.18"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
