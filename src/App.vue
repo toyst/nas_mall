@@ -1,18 +1,5 @@
 <template>
 	<div id="app">
-                    <v-btn
-              color="pink"
-              dark
-              small
-              fixed
-              bottom
-              left
-              fab
-              style="left: 30vw"
-              @click.native="dialog=true"
-            >
-              +
-            </v-btn>
 		<v-tabs icons-and-text
 		        centered
 		        dark
@@ -23,6 +10,10 @@
 				<!-- <v-icon>view_list</v-icon> -->
 			</v-tab>
 			<v-tab href="#tab-2">
+				添加商品
+				<!-- <v-icon>history</v-icon> -->
+			</v-tab>
+            <v-tab href="#tab-3">
 				购买记录
 				<!-- <v-icon>history</v-icon> -->
 			</v-tab>
@@ -61,12 +52,7 @@
 				</div>
 			</v-tab-item>
 			<v-tab-item id="tab-2">
-
-			</v-tab-item>
-
-		</v-tabs>
-        <v-dialog v-model="dialog" max-width="500px" >
-            <v-card style="background: white">
+                <v-card style="background: white">
 					<v-card-title>
 						<span class="headline">添加商品</span>
 					</v-card-title>
@@ -83,6 +69,12 @@
 								        sm6
 								        md4>
 									<v-text-field label="价格（NAS）" v-model="price"
+									              hint="请输入整数"></v-text-field>
+								</v-flex>
+                                <v-flex xs12
+								        sm6
+								        md4>
+									<v-text-field label="数量）" v-model="count"
 									              hint="请输入整数"></v-text-field>
 								</v-flex>
 								<v-flex xs12>
@@ -109,144 +101,201 @@
 						       flat
 						       @click.native="handleOk">确定</v-btn>
 					</v-card-actions>
-				</v-card>
-        </v-dialog>
+			    </v-card>
+			</v-tab-item>
+            <v-tab-item id="tab-3">
+                购买记录
+            </v-tab-item>
+		</v-tabs>
+
 
 	</div>
 </template>
 
 <script>
-import NebPay from 'nebPay'
-import nebulas from 'nebulas'
-const nebPay = new NebPay()
-const Account = nebulas.Account
-const neb = new nebulas.Neb()
-const from = Account.NewAccount().getAddressString()
-const to = 'n1oYYjxpUf1UD7Fg3v5vjydgV9QjWKqBSD3'
-neb.setRequest(new nebulas.HttpRequest('https://testnet.nebulas.io'))
+import NebPay from "nebPay";
+import nebulas from "nebulas";
+const nebPay = new NebPay();
+const Account = nebulas.Account;
+const neb = new nebulas.Neb();
+const from = Account.NewAccount().getAddressString();
+const to = "n1oYYjxpUf1UD7Fg3v5vjydgV9QjWKqBSD3";
+neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
+
+const getParams = (arr) => {
+    let str = '["'
+    arr.forEach((v,idx) => {
+        if(idx < arr.length - 1) {
+            str += v + '","'
+        }else {
+            str += v + '"]'
+        }
+    })
+    return str
+}
+const call = ({func,callArgs}) => {
+  var value = "0";
+  var nonce = "0";
+  var gas_price = "1000000";
+  var gas_limit = "2000000";
+  var callFunction = func;
+  var contract = {
+    function: callFunction,
+    args: callArgs
+  };
+
+  return neb.api
+    .call(from, to, value, nonce, gas_price, gas_limit, contract)
+};
 
 export default {
-    name: 'App',
-    data() {
-        return {
-            dialog: false,
-            name: '',
-            price: '',
-            desc: '',
-            email: '',
-            link: '',
-            items: [
-                { name: '商品', desc: '描述', price: 20 },
-                { name: '商品', desc: '描述', price: 20 },
-                { name: '商品', desc: '描述', price: 20 },
-                { name: '商品', desc: '描述', price: 20 },
-                { name: '商品', desc: '描述', price: 20 }
-            ]
-        }
+  name: "App",
+  data() {
+    return {
+      dialog: false,
+      name: "",
+      price: "",
+      desc: "",
+      email: "",
+      link: "",
+      count: "",
+      items: [
+        { name: "商品", desc: "描述", price: 20 },
+        { name: "商品", desc: "描述", price: 20 },
+        { name: "商品", desc: "描述", price: 20 },
+        { name: "商品", desc: "描述", price: 20 },
+        { name: "商品", desc: "描述", price: 20 }
+      ]
+    };
+  },
+  methods: {
+    handleOk() {
+      const { name, desc, price, email, count, link } = this;
+      const seller = "";
+      const func = "addCommodity";
+      const value = "0";
+      const addCommodityArgs = getParams(name,seller,email,price,count,desc,link)
+      const options = {
+        listener: function(res) {
+          console.log("交易返回信息", res);
+        },
+        callback: undefined //可以指定交易查询服务器
+      };
+      nebPay.call(to, value, func, addCommodityArgs, options);
+      this.name = this.desc = this.price = this.email = this.count = this.link =
+        "";
     },
-    methods: {
-        handleOk() {
-            // nebPay.call()
-        }
+    getItems() {
+        call({
+            func: 'getCommoditiesCount',
+            callArgs: getParams([''])
+        })
+        .then(res => {
+            console.log({res})
+        })
     }
-    // created() {
-    //     const to = 'n1wfNuDbm956s87bG2KHcENo84Ez2k412CQ'
-    //     const value = '0'
-    //     const func = 'verifyAddress'
-    //     const defaultOptions = {
-    //         goods: {
-    //             //Dapp端对当前交易商品的描述信息，app暂时不展示
-    //             name: '', //商品名称
-    //             desc: '', //描述信息
-    //             orderId: '', //订单ID
-    //             ext: '' //扩展字段
-    //         },
-    //         qrcode: {
-    //             showQRCode: false, //是否显示二维码信息
-    //             container: undefined //指定显示二维码的canvas容器，不指定则生成一个默认canvas
-    //         },
-    //         // callback 是记录交易返回信息的交易查询服务器地址，不指定则使用默认地址
-    //         callback: undefined,
-    //         // listener: 指定一个listener函数来处理交易返回信息（仅用于浏览器插件，App钱包不支持listener）
-    //         listener: undefined,
-    //         // if use nrc20pay ,should input nrc20 params like name, address, symbol, decimals
-    //         nrc20: undefined
-    //     }
-    //     var options = {
-    //         listener: function (res) {
-    //             console.log('交易返回信息',res)
-    //         },
-    //         callback: undefined //可以指定交易查询服务器
-    //     }
+  },
+  created() {
+      this.getItems()
+  }
+  // created() {
+  //     const to = 'n1wfNuDbm956s87bG2KHcENo84Ez2k412CQ'
+  //     const value = '0'
+  //     const func = 'verifyAddress'
+  //     const defaultOptions = {
+  //         goods: {
+  //             //Dapp端对当前交易商品的描述信息，app暂时不展示
+  //             name: '', //商品名称
+  //             desc: '', //描述信息
+  //             orderId: '', //订单ID
+  //             ext: '' //扩展字段
+  //         },
+  //         qrcode: {
+  //             showQRCode: false, //是否显示二维码信息
+  //             container: undefined //指定显示二维码的canvas容器，不指定则生成一个默认canvas
+  //         },
+  //         // callback 是记录交易返回信息的交易查询服务器地址，不指定则使用默认地址
+  //         callback: undefined,
+  //         // listener: 指定一个listener函数来处理交易返回信息（仅用于浏览器插件，App钱包不支持listener）
+  //         listener: undefined,
+  //         // if use nrc20pay ,should input nrc20 params like name, address, symbol, decimals
+  //         nrc20: undefined
+  //     }
+  //     var options = {
+  //         listener: function (res) {
+  //             console.log('交易返回信息',res)
+  //         },
+  //         callback: undefined //可以指定交易查询服务器
+  //     }
 
-    //     // 拼凑addCommodity的参数格式
-    //     const params = {
-    //         name: 'name',
-    //         seller: 'seller',
-    //         seller_email: 'zaakin',
-    //         receipt_address: 'piouslove',
-    //         price: 4,
-    //         total_amount: 10,
-    //         remained_amount: '1133664',
-    //         description: 'only for test',
-    //         link: 'love'
-    //     }
-    //     const {name,seller,seller_email,receipt_address,price,total_amount,remained_amount,description,link} = params
-    //     const addCommodityArgs = "[\"" + name + "\",\"" + seller + "\",\"" + seller_email + "\",\"" + receipt_address + "\",\"" + price + "\",\"" + total_amount + "\",\"" + remained_amount + "\",\"" + description + "\",\"" + link + "\"]"
+  //     // 拼凑addCommodity的参数格式
+  //     const params = {
+  //         name: 'name',
+  //         seller: 'seller',
+  //         seller_email: 'zaakin',
+  //         receipt_address: 'piouslove',
+  //         price: 4,
+  //         total_amount: 10,
+  //         remained_amount: '1133664',
+  //         description: 'only for test',
+  //         link: 'love'
+  //     }
+  //     const {name,seller,seller_email,receipt_address,price,total_amount,remained_amount,description,link} = params
+  //     const addCommodityArgs = "[\"" + name + "\",\"" + seller + "\",\"" + seller_email + "\",\"" + receipt_address + "\",\"" + price + "\",\"" + total_amount + "\",\"" + remained_amount + "\",\"" + description + "\",\"" + link + "\"]"
 
-    //     // 拼凑 verifyAddress的参数格式
-    //     const verifyAddressArgs = "[\"" + to + "\"]"
+  //     // 拼凑 verifyAddress的参数格式
+  //     const verifyAddressArgs = "[\"" + to + "\"]"
 
-    //     //实例化
-    //     const neb = new NebPay()
-    //     // 调用call  返回交易流水号
-    //     const serialNumber = neb.call(to, value, func,verifyAddressArgs, options)
-    //     //打印返回值：serialNumber
-    //     console.log(serialNumber)
-    //            //设置定时查询交易结果
-    //     var intervalQuery = setInterval(function() {
-    //         funcIntervalQuery();
-    //     }, 5000);
-    //     // 调用pay
-    //     // neb.pay(to, value, defaultOptions)
+  //     //实例化
+  //     const neb = new NebPay()
+  //     // 调用call  返回交易流水号
+  //     const serialNumber = neb.call(to, value, func,verifyAddressArgs, options)
+  //     //打印返回值：serialNumber
+  //     console.log(serialNumber)
+  //            //设置定时查询交易结果
+  //     var intervalQuery = setInterval(function() {
+  //         funcIntervalQuery();
+  //     }, 5000);
+  //     // 调用pay
+  //     // neb.pay(to, value, defaultOptions)
 
-    //     window.addEventListener('message',function (e) {
-    //         console.log(e.data,'data!!')
-    //     })
+  //     window.addEventListener('message',function (e) {
+  //         console.log(e.data,'data!!')
+  //     })
 
-    //     function funcIntervalQuery() {
-    //         neb.queryPayInfo(serialNumber)   //search transaction result from server (result upload to server by app)
-    //             .then(function (resp) {
-    //                 var respObject = JSON.parse(resp)
-    //                 console.log("交易结果 result: " , respObject)   //resp is a JSON string
-    //                 if(respObject.code === 0){
-    //                     //交易成功, 处理相关任务
+  //     function funcIntervalQuery() {
+  //         neb.queryPayInfo(serialNumber)   //search transaction result from server (result upload to server by app)
+  //             .then(function (resp) {
+  //                 var respObject = JSON.parse(resp)
+  //                 console.log("交易结果 result: " , respObject)   //resp is a JSON string
+  //                 if(respObject.code === 0){
+  //                     //交易成功, 处理相关任务
 
-    //                     clearInterval(intervalQuery)    //清除定时查询
-    //                 }
-    //             })
-    //             .catch(function (err) {
-    //                 console.log(err);
-    //             });
-    //     }
-    // }
-}
+  //                     clearInterval(intervalQuery)    //清除定时查询
+  //                 }
+  //             })
+  //             .catch(function (err) {
+  //                 console.log(err);
+  //             });
+  //     }
+  // }
+};
 </script>
 
 <style>
 #app {
-    min-height: 100vh;
-    width: 80vh;
-    margin: 0 auto;
-    background: white;
+  min-height: 100vh;
+  width: 80vh;
+  margin: 0 auto;
+  background: white;
 }
 .goods-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 20px;
-    height: 100%;
-    /* overflow: auto; */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 20px;
+  height: 100%;
+  /* overflow: auto; */
 }
 </style>
 
