@@ -2,7 +2,7 @@
 	<div id="app">
         <mu-tabs :value="activeTab" @change="handleTabChange">
             <mu-tab value="tab1" icon="list" title="商品列表"/>
-            <mu-tab value="tab2" icon="history" title="购买记录"/>
+            <mu-tab value="tab2" icon="history" title="购买记录" @active="handleTab2" />
         </mu-tabs>
         <div v-if="activeTab === 'tab1'" class="goods-list scrollBar">
             <div v-for="item in items" :key="item.id">
@@ -75,6 +75,10 @@ const from = Account.NewAccount().getAddressString();
 const to = "n22T3E3aDorqs9aC92hTAQcLDpyyM93xds4";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
+neb.api.getNebState().then(res => {
+  console.log(res, "state");
+});
+
 const getParams = arr => {
   let str = '["';
   arr.forEach((v, idx) => {
@@ -120,6 +124,7 @@ export default {
   data() {
     return {
       currItem: {},
+      myNebAddress: '',
       // defaultImg,
       addDialog: false,
       activeTab: "tab1",
@@ -186,7 +191,7 @@ export default {
         callArgs: getParams([""])
       }).then(res => {
         let items = JSON.parse(res.result);
-        console.log(items,'商品列表')
+        console.log(items, "商品列表");
         this.items = items;
       });
     },
@@ -195,17 +200,22 @@ export default {
         func: "getTxes",
         callArgs: getParams([""])
       }).then(res => {
-        console.log("记录", JSON.parse(res.result));
         const arr = JSON.parse(res.result);
         const record = [];
         arr.forEach(v => {
-          if (v.buyer === Account.NewAccount().getAddressString()) {
+          if (v.buyer === sessionStorage.getItem('myNebAddress')) {
             record.push(v);
           }
         });
         console.log(arr, "记录");
-        this.record = arr;
+        this.record = record;
       });
+    },
+    handleTab2() {
+        if(!sessionStorage.getItem('myNebAddress')) {
+            alert('此地址暂无交易记录')
+            this.activeTab = 'tab1'
+        }
     },
     handleBuy() {
       const { buyCount, currItem: { id, price } } = this;
@@ -219,6 +229,7 @@ export default {
         callback: undefined //可以指定交易查询服务器
       };
       this.serialNumber = nebPay.call(to, value, func, args, options);
+
       this.intervalQuery = setInterval(() => {
         this.funcIntervalQuery();
       }, 10000);
@@ -240,12 +251,14 @@ export default {
     funcIntervalQuery() {
       nebPay
         .queryPayInfo(this.serialNumber) //search transaction result from server (result upload to server by app)
-        .then((resp) => {
+        .then(resp => {
           console.log("tx result: " + resp); //resp is a JSON string
           var respObject = JSON.parse(resp);
           if (respObject.code === 0) {
-            alert('操作成功，请刷新页面')
-            //   location.reload()
+            alert("操作成功，请刷新页面");
+            nebPay.queryPayInfo(this.serialNumber).then(res => {
+              sessionStorage.setItem('myNebAddress',JSON.parse(res).data.from)
+            });
             clearInterval(this.intervalQuery);
           }
         })
@@ -268,7 +281,6 @@ export default {
   background: white;
 }
 .goods-list {
-
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -283,7 +295,7 @@ export default {
 .record {
   width: 100%;
   padding: 20px;
-    height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
   overflow: auto;
   > ul {
     width: 100%;
@@ -299,7 +311,7 @@ export default {
       align-items: center;
       transition: all 0.2s;
       &:hover {
-          transform: translateY(-5px);
+        transform: translateY(-5px);
       }
       .record-icon {
         width: 10%;
@@ -321,21 +333,20 @@ export default {
       }
     }
   }
-
 }
 .unit {
-    color: #bbb;
-    margin-left: 5px;
-    font-size: 12px;
+  color: #bbb;
+  margin-left: 5px;
+  font-size: 12px;
 }
- .scrollBar {
+.scrollBar {
   &::-webkit-scrollbar-thumb {
     background-color: #ddd;
     border-radius: 20px;
     z-index: 999;
     cursor: pointer;
     &:hover {
-      background-color: rgba(136, 136, 136, .5);
+      background-color: rgba(136, 136, 136, 0.5);
     }
   }
   &::-webkit-scrollbar {
@@ -346,5 +357,4 @@ export default {
     border-radius: 20px;
   }
 }
-     
 </style>
