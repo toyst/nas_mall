@@ -10,7 +10,7 @@
                     <mu-card-header :title="item.name">
                     </mu-card-header>
                     <mu-card-media :subTitle="item.description">
-                        <img :src="item.link || '/static/plane.jpg'" />
+                        <img :src="item.link || defaultImg" />
                     </mu-card-media>
                     <mu-card-text>
                         <span>￥{{item.price}}</span> <br>
@@ -67,6 +67,7 @@
 <script>
 import NebPay from "nebPay";
 import nebulas from "nebulas";
+import defaultImg from '../static/plane.jpg'
 const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
@@ -98,12 +99,22 @@ const call = ({ func, callArgs }) => {
 
   return neb.api.call(from, to, value, nonce, gas_price, gas_limit, contract);
 };
-
+const  CheckImgExists = (imgurl) => {  
+    var ImgObj = new Image(); //判断图片是否存在  
+    ImgObj.src = imgurl;  
+    //没有图片，则返回-1  
+    if (ImgObj.fileSize > 0 || (ImgObj.width > 0 && ImgObj.height > 0)) {  
+        return true;  
+    } else {  
+        return false;
+    }  
+} 
 export default {
   name: "App",
   data() {
     return {
         currItem: {},
+        defaultImg,
         addDialog: false,
       activeTab: "tab1",
       buyCount: 0,
@@ -129,6 +140,7 @@ export default {
       }
   },
   methods: {
+
     handleAdd() {
       const { name, description, price, seller_email, count, link } = this;
       const func = "addCommodity";
@@ -156,7 +168,13 @@ export default {
         func: "getCommodities",
         callArgs: getParams([""])
       }).then(res => {
-        this.items = JSON.parse(res.result);
+        let items = JSON.parse(res.result);
+        items.forEach(v => {
+            if(!CheckImgExists(v.link)) {
+                items.link = ''
+            }
+        })
+        this.items = items
       });
     },
     getRecord() {
@@ -307,48 +325,48 @@ export default {
   padding: 20px;
   height: 100%;
   > div {
-      width: 48%;
-      margin-bottom: 20px;
+    width: 48%;
+    margin-bottom: 20px;
   }
 }
 .record {
+  width: 100%;
+  padding: 20px;
+  > ul {
     width: 100%;
-    padding: 20px;
-    >ul {
-        width: 100%;
-        >li {
-            list-style: none;
-            width: 100%;
-            padding: 0 20px;
-            height: 100px;
-            box-shadow: 0 0 24px 0 rgba(15, 66, 76, 0.25);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            .record-unit {
-                color: #bbb;
-                margin-left: 5px;
-                font-size: 12px;
-            }
-            .record-icon {
-                width: 10%;
-            }
-            .record-main {
-                width: 60%;
-                .record-name {
-                    font-size: 20px;
-                }
-                .record-price {
-                    color: #999999;
-                }
-            }
-            .record-sub {
-                width: 30%;
-                font-size: 12px;
-                color: #aaa;
-                line-height: 20px;
-            }
+    > li {
+      list-style: none;
+      width: 100%;
+      padding: 0 20px;
+      height: 100px;
+      box-shadow: 0 0 24px 0 rgba(15, 66, 76, 0.25);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .record-unit {
+        color: #bbb;
+        margin-left: 5px;
+        font-size: 12px;
+      }
+      .record-icon {
+        width: 10%;
+      }
+      .record-main {
+        width: 60%;
+        .record-name {
+          font-size: 20px;
         }
+        .record-price {
+          color: #999999;
+        }
+      }
+      .record-sub {
+        width: 30%;
+        font-size: 12px;
+        color: #aaa;
+        line-height: 20px;
+      }
     }
+  }
 }
 </style>
