@@ -40,13 +40,15 @@
 						<v-card-title>
 							<div>
 								<span class="grey--text">{{item.name}}</span><br>
-								<span>{{item.desc}}</span><br>
+								<span>{{item.description}}</span><br>
 								<span>￥{{item.price}}</span><br>
 							</div>
 						</v-card-title>
 						<v-card-actions>
 							<v-btn flat
-							       color="orange">购买</v-btn>
+							       color="orange" @click.native="buy(item.id)">购买</v-btn>
+                           	<v-text-field label="数量" v-model="buyCount"
+									              hint="请输入整数"></v-text-field>
 						</v-card-actions>
 					</v-card>
 				</div>
@@ -82,11 +84,11 @@
 									              required></v-text-field>
 								</v-flex>
 								<v-flex xs12>
-									<v-text-field label="描述" v-model="desc"
+									<v-text-field label="描述" v-model="description"
 									              required></v-text-field>
 								</v-flex>
 								<v-flex xs12>
-									<v-text-field label="Email" v-model="email"
+									<v-text-field label="seller_email" v-model="seller_email"
 									              required></v-text-field>
 								</v-flex>
 							</v-layout>
@@ -119,21 +121,22 @@ const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
 const from = Account.NewAccount().getAddressString();
-const to = "n1oYYjxpUf1UD7Fg3v5vjydgV9QjWKqBSD3";
+const to = "n22T3E3aDorqs9aC92hTAQcLDpyyM93xds4";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
-const getParams = (arr) => {
-    let str = '["'
-    arr.forEach((v,idx) => {
-        if(idx < arr.length - 1) {
-            str += v + '","'
-        }else {
-            str += v + '"]'
-        }
-    })
-    return str
-}
-const call = ({func,callArgs}) => {
+const getParams = arr => {
+  console.log(arr, "arr");
+  let str = '["';
+  arr.forEach((v, idx) => {
+    if (idx < arr.length - 1) {
+      str += v + '","';
+    } else {
+      str += v + '"]';
+    }
+  });
+  return str;
+};
+const call = ({ func, callArgs }) => {
   var value = "0";
   var nonce = "0";
   var gas_price = "1000000";
@@ -144,37 +147,37 @@ const call = ({func,callArgs}) => {
     args: callArgs
   };
 
-  return neb.api
-    .call(from, to, value, nonce, gas_price, gas_limit, contract)
+  return neb.api.call(from, to, value, nonce, gas_price, gas_limit, contract);
 };
 
 export default {
   name: "App",
   data() {
     return {
+      buyCount: "",
       dialog: false,
       name: "",
       price: "",
-      desc: "",
-      email: "",
+      description: "",
+      seller_email: "",
       link: "",
       count: "",
-      items: [
-        { name: "商品", desc: "描述", price: 20 },
-        { name: "商品", desc: "描述", price: 20 },
-        { name: "商品", desc: "描述", price: 20 },
-        { name: "商品", desc: "描述", price: 20 },
-        { name: "商品", desc: "描述", price: 20 }
-      ]
+      items: []
     };
   },
   methods: {
     handleOk() {
-      const { name, desc, price, email, count, link } = this;
-      const seller = "";
+      const { name, description, price, seller_email, count, link } = this;
       const func = "addCommodity";
       const value = "0";
-      const addCommodityArgs = getParams(name,seller,email,price,count,desc,link)
+      const addCommodityArgs = getParams([
+        name,
+        seller_email,
+        price,
+        count,
+        description,
+        link
+      ]);
       const options = {
         listener: function(res) {
           console.log("交易返回信息", res);
@@ -182,21 +185,42 @@ export default {
         callback: undefined //可以指定交易查询服务器
       };
       nebPay.call(to, value, func, addCommodityArgs, options);
-      this.name = this.desc = this.price = this.email = this.count = this.link =
+      this.name = this.description = this.price = this.seller_email = this.count = this.link =
         "";
     },
     getItems() {
+      call({
+        func: "getCommodities",
+        callArgs: getParams([""])
+      }).then(res => {
+        this.items = JSON.parse(res.result);
+      });
+    },
+    getRecord() {
         call({
-            func: 'getCommoditiesCount',
-            callArgs: getParams([''])
-        })
-        .then(res => {
-            console.log({res})
-        })
+        func: "getTxes",
+        callArgs: getParams([""])
+      }).then(res => {
+        console.log('记录',JSON.parse(res.result))
+      });
+    },
+    buy(key) {
+      const { buyCount } = this;
+      const func = "buy";
+      const value = "0";
+      const args = getParams([key,buyCount]);
+      const options = {
+        listener: function(res) {
+          console.log("交易返回信息", res);
+        },
+        callback: undefined //可以指定交易查询服务器
+      };
+      nebPay.call(to, value, func, args, options);
     }
   },
   created() {
-      this.getItems()
+    this.getItems();
+    this.getRecord()
   }
   // created() {
   //     const to = 'n1wfNuDbm956s87bG2KHcENo84Ez2k412CQ'
@@ -206,7 +230,7 @@ export default {
   //         goods: {
   //             //Dapp端对当前交易商品的描述信息，app暂时不展示
   //             name: '', //商品名称
-  //             desc: '', //描述信息
+  //             description: '', //描述信息
   //             orderId: '', //订单ID
   //             ext: '' //扩展字段
   //         },
@@ -232,16 +256,16 @@ export default {
   //     const params = {
   //         name: 'name',
   //         seller: 'seller',
-  //         seller_email: 'zaakin',
+  //         seller_seller_email: 'zaakin',
   //         receipt_address: 'piouslove',
   //         price: 4,
   //         total_amount: 10,
   //         remained_amount: '1133664',
-  //         description: 'only for test',
+  //         descriptionription: 'only for test',
   //         link: 'love'
   //     }
-  //     const {name,seller,seller_email,receipt_address,price,total_amount,remained_amount,description,link} = params
-  //     const addCommodityArgs = "[\"" + name + "\",\"" + seller + "\",\"" + seller_email + "\",\"" + receipt_address + "\",\"" + price + "\",\"" + total_amount + "\",\"" + remained_amount + "\",\"" + description + "\",\"" + link + "\"]"
+  //     const {name,seller,seller_seller_email,receipt_address,price,total_amount,remained_amount,descriptionription,link} = params
+  //     const addCommodityArgs = "[\"" + name + "\",\"" + seller + "\",\"" + seller_seller_email + "\",\"" + receipt_address + "\",\"" + price + "\",\"" + total_amount + "\",\"" + remained_amount + "\",\"" + descriptionription + "\",\"" + link + "\"]"
 
   //     // 拼凑 verifyAddress的参数格式
   //     const verifyAddressArgs = "[\"" + to + "\"]"
@@ -298,4 +322,3 @@ export default {
   /* overflow: auto; */
 }
 </style>
-
