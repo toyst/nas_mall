@@ -16,9 +16,9 @@
                     <mu-card-text>
                         <span>单价：{{item.price}}  </span>  <span class="unit">(NAS)</span> <br>
                         <span>库存：{{item.remained_quantity}} / {{item.total_quantity}}</span><br>
-                        <span>卖家邮箱：{{item.seller_email}}</span> <br>
-                        <span>id： {{item.id}}</span><br>
-                        <span>卖家id：{{item.seller}}</span>
+                        <span style="word-break: break-all">卖家邮箱：{{item.seller_email}}</span> <br>
+                        <span style="word-break: break-all">id： {{item.id}}</span><br>
+                        <span style="word-break: break-all">卖家id：{{item.seller}}</span>
 
                     </mu-card-text>
                     <mu-card-actions>
@@ -39,15 +39,15 @@
                         <span class="record-name">{{item.name}} <br></span>
                         
                         <span class="record-price">￥ {{item.price}} <span class="unit">(NAS)</span> <br></span>
-                        <span><br>
+                        <span style="word-break: break-all"><br>
                           id:  {{item.commodity_id}}
                         </span><br>
-                        <span>
+                        <span style="word-break: break-all">
                           交易id： {{item.id}}
                         </span>
                     </div>
                     <div class="record-sub">
-                        <span>买家： {{item.buyer}}</span><br>
+                        <span style="word-break: break-all">买家： {{item.buyer}}</span><br>
                         <span>数量： {{item.amount}} <span class="unit">(NAS)</span> </span> <br>
                         <span>总价：{{item.quantity}} <span class="unit">(NAS)</span> <br></span>
                         <span>时间： {{new Date(item.timestamp * 1000).toLocaleString()}}</span>
