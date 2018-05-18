@@ -5,12 +5,13 @@
             <mu-tab value="tab2" icon="history" title="购买记录" @active="handleTab2" />
         </mu-tabs>
         <div v-if="activeTab === 'tab1'" class="goods-list scrollBar">
+            
             <div v-for="item in items" :key="item.id">
                 <mu-card>
                     <mu-card-header :title="item.name">
                     </mu-card-header>
                     <mu-card-media :subTitle="item.description">
-                        <img :src="item.link" onerror="this.src='../static/plane.jpg'" height="220" width="100%" />
+                        <img :src="item.link" onerror="this.src='https://nebulas.io/docs/NebulasLogo.svg'" height="220" width="100%" />
                     </mu-card-media>
                     <mu-card-text>
                         <span>单价：{{item.price}}  </span>  <span class="unit">(NAS)</span> <br>
@@ -27,6 +28,7 @@
             </div>
         </div>
         <div v-if="activeTab === 'tab2'" class="record scrollBar">
+           <span v-if="record.length === 0">暂无购买记录，快去购买商品吧~</span>
             <ul>
                 <li v-for="(item,idx) in record" :key="idx">
                     <div class="record-icon">
@@ -63,7 +65,7 @@
             <mu-text-field label="价格(NAS)" hintText="请输入数字" style="width: 30%" labelFloat v-model="price"/>
             <mu-text-field label="数量" hintText="请输入整数" style="width: 30%" labelFloat v-model="count"/>
             <br/>
-            <mu-text-field  style="width: 90%" hintText="最多不超过20个字符"  @textOverflow="handleInputOverflow" :maxLength="20" :errorText="inputErrorText"  label="描述"  labelFloat v-model="description" /> <br>
+            <mu-text-field  style="width: 90%" hintText="最多不超过50个字符" multiLine :rows="2" :rowsMax="3" @textOverflow="handleInputOverflow" :maxLength="50" :errorText="inputErrorText"  label="描述"  labelFloat v-model="description" /> <br>
             <!-- <br/> -->
             <mu-text-field label="邮箱" labelFloat style="width: 30%" v-model="seller_email"/><br>
 
@@ -71,7 +73,15 @@
             <mu-flat-button slot="actions" @click="handleCloseAdd" primary label="取消"/>
             <mu-flat-button slot="actions" primary @click="handleAdd" label="确定"/>
         </mu-dialog>
-        <mu-dialog :open="dialogAddress" title="请发起一次交易或者手动输入钱包地址">
+        <mu-dialog :open="dialogAddress" title="请输入钱包地址">
+            <div class="historys">
+              <div v-for="(item,idx) in historys" :key="idx" @click="nebAddress = item">
+                {{item}}
+              </div> 
+                            <div v-for="(item,idx) in historys" :key="idx" @click="nebAddress = item">
+                {{item}}
+              </div> 
+            </div>
             <mu-text-field hintText="请输入合法的钱包地址" fullWidth v-model="nebAddress" />
             <mu-flat-button slot="actions" @click="handleCloseAddress" primary label="取消"/>
             <mu-flat-button slot="actions" primary @click="handleAddress" label="确定" :disabled="nebAddress.trim() === ''" />
@@ -105,7 +115,7 @@ const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
 const from = Account.NewAccount().getAddressString();
-const to = "n22T3E3aDorqs9aC92hTAQcLDpyyM93xds4";
+const to = "n1vU7PCcpHAZXmNeXWaevLAAxRfViPg7TWW";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
 neb.api.getNebState().then(res => {
@@ -157,12 +167,12 @@ export default {
   name: "App",
   data() {
     return {
+      historys: JSON.parse(sessionStorage.getItem('myNebAddress')),
       dialogIntr: true,
       inputErrorText: "",
-      nebAddress: "",
+      nebAddress: "n1S6RQy6F6GetEU6hCyu8enfS1kWZVkfYSf",
       dialogAddress: false,
       currItem: {},
-      myNebAddress: "",
       // defaultImg,
       addDialog: false,
       activeTab: "tab1",
@@ -197,8 +207,8 @@ export default {
         alert('请输入正确的名称')
         return
       }
-      if(description.length > 20) {
-        alert('商品描述在20字以内')
+      if(description.length > 50) {
+        alert('商品描述在50字以内')
         return
       }
       if(isNaN(Number(price)) || price <= 0 ) {
@@ -261,7 +271,7 @@ export default {
         const arr = JSON.parse(res.result);
         const record = [];
         arr.forEach(v => {
-          if (v.buyer === localStorage.getItem("myNebAddress")) {
+          if (v.buyer === this.nebAddress) {
             record.push(v);
           }
         });
@@ -270,9 +280,7 @@ export default {
       });
     },
     handleTab2() {
-      if (!localStorage.getItem("myNebAddress")) {
-        this.dialogAddress = true;
-      }
+      this.dialogAddress = true;
     },
     handleBuy() {
       let { buyCount, currItem: { id, price, remained_quantity} } = this;
@@ -312,16 +320,18 @@ export default {
         this.nebAddress = ''
         return
       }
-      localStorage.setItem("myNebAddress", this.nebAddress);
-      this.getRecord()
+      
+      const history = [...new Set([...JSON.parse(localStorage.getItem('myNebAddress')),this.nebAddress])]
+      localStorage.setItem("myNebAddress", JSON.stringify(history))
+      this.historys = history
+      this.getRecord()  
       this.handleCloseAddress();
     },
     handleCloseAddress() {
-      if (!localStorage.getItem("myNebAddress")) {
+      if (!this.nebAddress) {
         this.activeTab = "tab1";
       }
       this.dialogAddress = false;
-      this.nebAddress = "";
     },
     handleTabChange(val) {
       this.activeTab = val;
@@ -339,9 +349,6 @@ export default {
           var respObject = JSON.parse(resp);
           if (respObject.code === 0) {
             alert("操作成功，请刷新页面");
-            nebPay.queryPayInfo(this.serialNumber).then(res => {
-              localStorage.setItem("myNebAddress", JSON.parse(res).data.from);
-            });
             clearInterval(this.intervalQuery);
           }
         })
@@ -354,6 +361,9 @@ export default {
     }
   },
   created() {
+    if(localStorage.getItem('myNebAddress') === null) {
+      localStorage.setItem('myNebAddress',JSON.stringify([]))
+    }
     this.getItems();
   }
 };
@@ -447,5 +457,19 @@ export default {
   font-size: 14px;
   line-height: 35px;
 }
+.historys {
 
+  >div {
+    margin-bottom: 5px;
+    background: #eee;
+    padding: 5px 10px;
+    font-size: 12px;
+    width: 255px;
+    cursor: pointer;
+    // color: white;
+    &:hover {
+      color: rgba(255,255,255,0.8);
+    }
+  }
+}
 </style>
