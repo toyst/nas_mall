@@ -44,21 +44,44 @@
             </ul>
         </div>
         <mu-dialog :open="dialog" title="输入购买数量" @close="handleCloseBuy">
-            <mu-text-field hintText="提示文字" v-model="buyCount" />
+            <mu-text-field hintText="请输入整数" v-model="buyCount" />
             <mu-flat-button slot="actions" @click="handleCloseBuy" primary label="取消"/>
             <mu-flat-button slot="actions" primary @click="handleBuy" label="确定"/>
         </mu-dialog>
-        <mu-dialog :open="addDialog" title="添加商品" @close="handleCloseAdd">
+        <mu-dialog :open="addDialog" title="发布商品" @close="handleCloseAdd">
             <mu-text-field label="名称" style="width: 30%" labelFloat v-model="name"/> 
-            <mu-text-field label="价格(NAS)" style="width: 30%" labelFloat v-model="price"/>
-            <mu-text-field label="数量" style="width: 30%" labelFloat v-model="count"/>
+            <mu-text-field label="价格(NAS)" hintText="请输入数字" style="width: 30%" labelFloat v-model="price"/>
+            <mu-text-field label="数量" hintText="请输入整数" style="width: 30%" labelFloat v-model="count"/>
             <br/>
-            <mu-text-field  multiLine style="width: 90%" :rows="3" :rowsMax="6" label="描述"  labelFloat v-model="description" /> <br>
+            <mu-text-field  style="width: 90%" hintText="最多不超过20个字符"  @textOverflow="handleInputOverflow" :maxLength="20" :errorText="inputErrorText"  label="描述"  labelFloat v-model="description" /> <br>
             <!-- <br/> -->
-            <mu-text-field label="邮箱" labelFloat style="width: 30%" v-model="seller_email"/>
-            <mu-text-field label="图片链接" labelFloat style="width: 30%" v-model="link"/><br/>
+            <mu-text-field label="邮箱" labelFloat style="width: 30%" v-model="seller_email"/><br>
+
+            <mu-text-field label="图片链接(若链接无效则展示默认图片)" hintText="图片上传功能正在开发中，请手动输入链接" labelFloat style="width: 90%" v-model="link"/><br/>
             <mu-flat-button slot="actions" @click="handleCloseAdd" primary label="取消"/>
             <mu-flat-button slot="actions" primary @click="handleAdd" label="确定"/>
+        </mu-dialog>
+        <mu-dialog :open="dialogAddress" title="请发起一次交易或者手动输入钱包地址">
+            <mu-text-field hintText="请输入合法的钱包地址" fullWidth v-model="nebAddress" />
+            <mu-flat-button slot="actions" @click="handleCloseAddress" primary label="取消"/>
+            <mu-flat-button slot="actions" primary @click="handleAddress" label="确定" :disabled="nebAddress.trim() === ''" />
+        </mu-dialog>
+        <mu-dialog :open="dialogIntr" title="使用说明">
+            <p class="intr">
+              欢迎来到NAS商品交易平台，本平台是一个基于星云链并用星云币支付的商品交易DAPP，主要功能有发布商品、商品列表、商品购买和交易记录查询。<br>
+              由于区块链钱包的特殊性，您需要在谷歌浏览器上打开此页面并且提前安装好 <a href="https://github.com/ChengOrangeJu/WebExtensionWallet" target="_blank">谷歌扩展钱包</a>  才可正常体验，谢谢！
+              <br>
+              一、发布商品<br>
+              点击页面中的加号按钮，按格式要求正确的填写您的商品信息<br>
+              (暂不支持图片上传，请手动输入图片链接，若链接无效则展示默认图片)。<br>
+              二、商品列表<br>
+              页面会自动展示所有的商品，刷新浏览器可获取最新的商品信息。<br>
+              三、商品购买<br>
+              您可以挑选中意的商品并通过卖家的联系方式及时沟通，确定购买之后输入所需数量，确保商品有足够库存并且您有足够的nas余额即可购买。<br>
+              四、交易记录查询<br>
+              输入您的nas钱包地址，确保有购买经历并且地址合法即可查看您的所有购买记录。
+            </p>
+            <mu-flat-button slot="actions" @click="dialogIntr = false" primary label="知道了"/>
         </mu-dialog>
         <mu-float-button icon="add" primary  style="position: fixed;bottom: 35px; right: 31vw" @click="addDialog = true" />
 	</div>
@@ -79,6 +102,7 @@ neb.api.getNebState().then(res => {
   console.log(res, "state");
 });
 
+const reg = new RegExp("^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$");
 const getParams = arr => {
   let str = '["';
   arr.forEach((v, idx) => {
@@ -123,8 +147,12 @@ export default {
   name: "App",
   data() {
     return {
+      dialogIntr: true,
+      inputErrorText: "",
+      nebAddress: "",
+      dialogAddress: false,
       currItem: {},
-      myNebAddress: '',
+      myNebAddress: "",
       // defaultImg,
       addDialog: false,
       activeTab: "tab1",
@@ -155,6 +183,26 @@ export default {
   methods: {
     handleAdd() {
       const { name, description, price, seller_email, count, link } = this;
+      if(name.trim === '') {
+        alert('请输入正确的名称')
+        return
+      }
+      if(description.length > 20) {
+        alert('商品描述在20字以内')
+        return
+      }
+      if(isNaN(Number(price)) || price <= 0 ) {
+        alert('请输入正确的价格')
+        return
+      }
+      if(isNaN(Number(count)) || Number.isInteger(count) || count < 1) {
+        alert('数量必须为正整数')
+        return
+      }
+      if(!reg.test(seller_email)) {
+        alert('请输入正确的邮箱')
+        return
+      }
       const func = "addCommodity";
       const value = "0";
       const addCommodityArgs = getParams([
@@ -203,7 +251,7 @@ export default {
         const arr = JSON.parse(res.result);
         const record = [];
         arr.forEach(v => {
-          if (v.buyer === sessionStorage.getItem('myNebAddress')) {
+          if (v.buyer === localStorage.getItem("myNebAddress")) {
             record.push(v);
           }
         });
@@ -212,14 +260,18 @@ export default {
       });
     },
     handleTab2() {
-        if(!sessionStorage.getItem('myNebAddress')) {
-            alert('此地址暂无交易记录')
-            this.activeTab = 'tab1'
-        }
+      if (!localStorage.getItem("myNebAddress")) {
+        this.dialogAddress = true;
+      }
     },
     handleBuy() {
-      const { buyCount, currItem: { id, price } } = this;
+      const { buyCount, currItem: { id, price, remained_quantity} } = this;
       const func = "buy";
+      if (isNaN(Number(buyCount)) || buyCount <= 0 || buyCount > remained_quantity ) {
+        alert('购买数量必须为小于库存的正数')
+        this.buyCount = 0
+        return
+      }
       const value = String(price * buyCount + 0.01);
       const args = getParams([id, buyCount]);
       const options = {
@@ -240,6 +292,22 @@ export default {
       this.buyCount = 0;
       this.currItem = {};
     },
+    handleAddress() {
+      if( !Account.isValidAddress(this.nebAddress)) {
+        alert('该地址无效，请重新输入')
+        this.nebAddress = ''
+        return
+      }
+      localStorage.setItem("myNebAddress", this.nebAddress);
+      this.handleCloseAddress();
+    },
+    handleCloseAddress() {
+      if (!localStorage.getItem("myNebAddress")) {
+        this.activeTab = "tab1";
+      }
+      this.dialogAddress = false;
+      this.nebAddress = "";
+    },
     handleTabChange(val) {
       this.activeTab = val;
     },
@@ -257,7 +325,7 @@ export default {
           if (respObject.code === 0) {
             alert("操作成功，请刷新页面");
             nebPay.queryPayInfo(this.serialNumber).then(res => {
-              sessionStorage.setItem('myNebAddress',JSON.parse(res).data.from)
+              localStorage.setItem("myNebAddress", JSON.parse(res).data.from);
             });
             clearInterval(this.intervalQuery);
           }
@@ -265,6 +333,9 @@ export default {
         .catch(function(err) {
           console.log(err);
         });
+    },
+    handleInputOverflow(isOverflow) {
+      this.inputErrorText = isOverflow ? "超过啦！！！！" : "";
     }
   },
   created() {
@@ -356,5 +427,9 @@ export default {
   &::-webkit-scrollbar-track {
     border-radius: 20px;
   }
+}
+.intr {
+  font-size: 14px;
+  line-height: 35px;
 }
 </style>
