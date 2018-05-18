@@ -15,7 +15,10 @@
                     <mu-card-text>
                         <span>单价：{{item.price}}  </span>  <span class="unit">(NAS)</span> <br>
                         <span>库存：{{item.remained_quantity}} / {{item.total_quantity}}</span><br>
-                        <span>卖家邮箱：{{item.seller_email}}</span>
+                        <span>卖家邮箱：{{item.seller_email}}</span> <br>
+                        <span>id： {{item.id}}</span><br>
+                        <span>卖家id：{{item.seller}}</span>
+
                     </mu-card-text>
                     <mu-card-actions>
                         <mu-raised-button label="购买"  secondary @click.native="dialog = true;currItem = item;" />
@@ -32,10 +35,17 @@
                     <div class="record-main">
 
                         <span class="record-name">{{item.name}} <br></span>
-                        <span class="record-price">￥ {{item.price}} <span class="unit">(NAS)</span> <br></span>
                         
+                        <span class="record-price">￥ {{item.price}} <span class="unit">(NAS)</span> <br></span>
+                        <span><br>
+                          id:  {{item.commodity_id}}
+                        </span><br>
+                        <span>
+                          交易id： {{item.id}}
+                        </span>
                     </div>
                     <div class="record-sub">
+                        <span>买家： {{item.buyer}}</span><br>
                         <span>数量： {{item.amount}} <span class="unit">(NAS)</span> </span> <br>
                         <span>总价：{{item.quantity}} <span class="unit">(NAS)</span> <br></span>
                         <span>时间： {{new Date(item.timestamp * 1000).toLocaleString()}}</span>
@@ -265,9 +275,13 @@ export default {
       }
     },
     handleBuy() {
-      const { buyCount, currItem: { id, price, remained_quantity} } = this;
+      let { buyCount, currItem: { id, price, remained_quantity} } = this;
+      buyCount = Number(buyCount)
+      price = Number(price)
+      remained_quantity = Number(remained_quantity)
       const func = "buy";
-      if (isNaN(Number(buyCount)) || buyCount <= 0 || buyCount > remained_quantity ) {
+
+      if (isNaN(buyCount) || buyCount <= 0 || buyCount > remained_quantity ) {
         alert('购买数量必须为小于库存的正数')
         this.buyCount = 0
         return
@@ -299,6 +313,7 @@ export default {
         return
       }
       localStorage.setItem("myNebAddress", this.nebAddress);
+      this.getRecord()
       this.handleCloseAddress();
     },
     handleCloseAddress() {
@@ -347,7 +362,7 @@ export default {
 <style scoped lang="scss">
 #app {
   min-height: 100vh;
-  width: 80vh;
+  width: 50vw;
   margin: 0 auto;
   background: white;
 }
@@ -432,4 +447,5 @@ export default {
   font-size: 14px;
   line-height: 35px;
 }
+
 </style>
