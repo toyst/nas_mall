@@ -39,6 +39,7 @@
                         <span class="record-name">{{item.name}} <br></span>
                         
                         <span class="record-price">￥ {{item.price}} <span class="unit">(NAS)</span> <br></span>
+                        <span>总价：{{item.amount}} <span class="unit">(NAS)</span> <br></span>
                         <span style="word-break: break-all"><br>
                           id:  {{item.commodity_id}}
                         </span><br>
@@ -48,8 +49,8 @@
                     </div>
                     <div class="record-sub">
                         <span style="word-break: break-all">买家： {{item.buyer}}</span><br>
-                        <span>数量： {{item.amount}} <span class="unit">(NAS)</span> </span> <br>
-                        <span>总价：{{item.quantity}} <span class="unit">(NAS)</span> <br></span>
+                        <span>数量： {{item.quantity}} <span class="unit"></span> </span> <br>
+                        
                         <span>时间： {{new Date(item.timestamp * 1000).toLocaleString()}}</span>
                     </div>
                 </li>
@@ -76,9 +77,6 @@
         <mu-dialog :open="dialogAddress" title="请输入钱包地址">
             <div class="historys">
               <div v-for="(item,idx) in historys" :key="idx" @click="nebAddress = item">
-                {{item}}
-              </div> 
-                            <div v-for="(item,idx) in historys" :key="idx" @click="nebAddress = item">
                 {{item}}
               </div> 
             </div>
@@ -194,9 +192,7 @@ export default {
     activeTab(value) {
       if (value === "tab1") {
         this.getItems();
-      }
-      if (value === "tab2") {
-        this.getRecord();
+        this.record = []
       }
     }
   },
@@ -277,6 +273,7 @@ export default {
         });
         console.log(arr, "记录");
         this.record = record;
+        this.nebAddress = ''
       });
     },
     handleTab2() {
@@ -399,7 +396,7 @@ export default {
       list-style: none;
       width: 100%;
       padding: 0 20px;
-      height: 100px;
+      height: 200px;
       box-shadow: 0 0 24px 0 rgba(15, 66, 76, 0.25);
       display: flex;
       margin-bottom: 30px;
