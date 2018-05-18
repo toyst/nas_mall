@@ -113,7 +113,7 @@ const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
 const from = Account.NewAccount().getAddressString();
-const to = "n1y3oFjdEa9XBWcsuZryo7B6gDkGRjzz83V";
+const to = "n1t7KCB6MprXndnSE924hCQjm2EtxKEuAhZ";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
 neb.api.getNebState().then(res => {
@@ -298,7 +298,7 @@ export default {
         this.buyCount = 0
         return
       }
-      const value = String(price * buyCount + 0.01);
+      const value = String(price * buyCount + 0.1);
       const args = getParams([id, buyCount]);
       const options = {
         listener: function(res) {
