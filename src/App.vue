@@ -113,13 +113,20 @@ const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
 const from = Account.NewAccount().getAddressString();
-const to = "n1vU7PCcpHAZXmNeXWaevLAAxRfViPg7TWW";
+const to = "n1ifPSLDUDD5j1aHXVddcJ1dgXaaRmBbEXT";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
 neb.api.getNebState().then(res => {
   console.log(res, "state");
 });
 
+const safeJSON = (json, defaultValue) => {
+    try {
+        return JSON.parse(json)
+    } catch (e) {
+        return defaultValue || json
+    }
+}
 const reg = new RegExp("^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$");
 const getParams = arr => {
   let str = '["';
@@ -165,7 +172,7 @@ export default {
   name: "App",
   data() {
     return {
-      historys: JSON.parse(sessionStorage.getItem('myNebAddress')),
+      historys: safeJSON(localStorage.getItem('myNebAddress'),[]),
       dialogIntr: true,
       inputErrorText: "",
       nebAddress: "n1S6RQy6F6GetEU6hCyu8enfS1kWZVkfYSf",
@@ -318,7 +325,7 @@ export default {
         return
       }
       
-      const history = [...new Set([...JSON.parse(localStorage.getItem('myNebAddress')),this.nebAddress])]
+      const history = [...new Set([...safeJSON(localStorage.getItem('myNebAddress'),[]),this.nebAddress])]
       localStorage.setItem("myNebAddress", JSON.stringify(history))
       this.historys = history
       this.getRecord()  
