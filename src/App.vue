@@ -113,7 +113,7 @@ const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
 const from = Account.NewAccount().getAddressString();
-const to = "n1ifPSLDUDD5j1aHXVddcJ1dgXaaRmBbEXT";
+const to = "n1qQfgZG5aGUM5WYne4dwfcFqBC2hV4hFLz";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
 neb.api.getNebState().then(res => {
