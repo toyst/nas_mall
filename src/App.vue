@@ -101,11 +101,12 @@
             </p>
             <mu-flat-button slot="actions" @click="dialogIntr = false" primary label="知道了"/>
         </mu-dialog>
-        <mu-float-button icon="add" primary  style="position: fixed;bottom: 35px; right: 31vw" @click="addDialog = true" />
+        <mu-float-button icon="add" primary  style="position: fixed;bottom: 35px; right: 23vw" @click="addDialog = true" />
 	</div>
 </template>
 
 <script>
+import {BigNumber} from 'bignumber.js';
 import NebPay from "nebPay";
 import nebulas from "nebulas";
 // import defaultImg from '../static/plane.jpg'
@@ -298,7 +299,8 @@ export default {
         this.buyCount = 0
         return
       }
-      const value = String(price * buyCount + 0.1);
+
+      const value = new BigNumber(price).times(buyCount).plus(0.1).toString()
       const args = getParams([id, buyCount]);
       const options = {
         listener: function(res) {
@@ -376,7 +378,7 @@ export default {
 <style scoped lang="scss">
 #app {
   min-height: 100vh;
-  width: 50vw;
+  width: 60vw;
   margin: 0 auto;
   background: white;
 }
@@ -468,7 +470,7 @@ export default {
     background: #eee;
     padding: 5px 10px;
     font-size: 12px;
-    width: 255px;
+    width: 300px;
     cursor: pointer;
     // color: white;
     &:hover {
