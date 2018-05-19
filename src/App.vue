@@ -106,7 +106,7 @@
 </template>
 
 <script>
-import BigNumber from 'bignumber.js';
+const BigNumber = require('bignumber.js') ;
 import NebPay from "nebPay";
 import nebulas from "nebulas";
 // import defaultImg from '../static/plane.jpg'
