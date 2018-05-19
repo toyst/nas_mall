@@ -106,14 +106,14 @@
 </template>
 
 <script>
-import {BigNumber} from 'bignumber.js';
+import BigNumber from 'bignumber.js';
 import NebPay from "nebPay";
 import nebulas from "nebulas";
 // import defaultImg from '../static/plane.jpg'
 const nebPay = new NebPay();
 const Account = nebulas.Account;
 const neb = new nebulas.Neb();
-const from = Account.NewAccount().getAddressString();
+const from = 'n1UBhGtXnosyt8HEmpUJnZfwby2MsbhLujW';
 const to = "n1t7KCB6MprXndnSE924hCQjm2EtxKEuAhZ";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
