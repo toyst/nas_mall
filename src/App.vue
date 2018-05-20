@@ -14,12 +14,19 @@
                         <img :src="item.link" onerror="this.src='https://nebulas.io/docs/NebulasLogo.svg'" height="220" width="100%" />
                     </mu-card-media>
                     <mu-card-text>
-                        <span>单价：{{item.price}}  </span>  <span class="unit">(NAS)</span> <br>
-                        <span>库存：{{item.remained_quantity}} / {{item.total_quantity}}</span><br>
-                        <span style="word-break: break-all">卖家邮箱：{{item.seller_email}}</span> <br>
-                        <span style="word-break: break-all">id： {{item.id}}</span><br>
-                        <span style="word-break: break-all">卖家id：{{item.seller}}</span>
+                        <span class="item-title" >单价</span>  
+                        {{item.price}}   <span class="unit">(NAS)</span> <br>
+                        <span class="item-title" >库存</span> 
+                        {{item.remained_quantity}} / {{item.total_quantity}}<br>
+                         <span  class="item-title" style="word-break: break-all">ID </span> 
+                        {{item.id}}<br>
 
+                        <span  class="item-title" style="word-break: break-all">上架时间 </span> 
+                        {{new Date(item.timestamp * 1000).toLocaleString()}}<br>
+                        <span  class="item-title" style="word-break: break-all">卖家</span> 
+                        {{item.seller}}<br>
+                        <span  class="item-title" style="word-break: break-all">卖家邮箱</span>  
+                        {{item.seller_email}}
                     </mu-card-text>
                     <mu-card-actions>
                         <mu-raised-button label="购买"  secondary @click.native="dialog = true;currItem = item;" />
@@ -36,22 +43,23 @@
                     </div>
                     <div class="record-main">
 
-                        <span class="record-name">{{item.name}} <br></span>
+                        <span class="record-name">{{item.name}} <br></span> <br>
                         
-                        <span class="record-price">￥ {{item.price}} <span class="unit">(NAS)</span> <br></span>
-                        <span>总价：{{item.amount}} <span class="unit">(NAS)</span> <br></span>
-                        <span style="word-break: break-all"><br>
-                          id:  {{item.commodity_id}}
-                        </span><br>
-                        <span style="word-break: break-all">
-                          交易id： {{item.id}}
-                        </span>
+                        <span class="item-title2" >单价 </span>  {{item.price}} <span class="unit">(NAS)</span> <br>
+                        <span class="item-title2" >数量 </span>  {{item.quantity}}  <br>
+                        <span class="item-title2" >总价  </span>{{item.amount}} <span class="unit">(NAS)</span>
+
+
                     </div>
                     <div class="record-sub">
-                        <span style="word-break: break-all">买家： {{item.buyer}}</span><br>
-                        <span>数量： {{item.quantity}} <span class="unit"></span> </span> <br>
-                        
-                        <span>时间： {{new Date(item.timestamp * 1000).toLocaleString()}}</span>
+                        <span class="item-title2"  style="word-break: break-all"><br>
+                          ID 
+                        </span>{{item.commodity_id}}<br>
+                        <span  class="item-title2" style="word-break: break-all">买家 </span>{{item.buyer}}<br>
+                        <span  class="item-title2" style="word-break: break-all">
+                          ID
+                        </span>{{item.id}} <br>                     
+                        <span class="item-title2" >时间 </span>{{new Date(item.timestamp * 1000).toLocaleString()}}
                     </div>
                 </li>
             </ul>
@@ -101,7 +109,7 @@
             </p>
             <mu-flat-button slot="actions" @click="dialogIntr = false" primary label="知道了"/>
         </mu-dialog>
-        <mu-float-button icon="add" primary  style="position: fixed;bottom: 35px; right: 23vw" @click="addDialog = true" />
+        <mu-float-button icon="add" primary  style="position: fixed;bottom: 35px; right: 21vw" @click="addDialog = true" />
 	</div>
 </template>
 
@@ -294,8 +302,8 @@ export default {
       remained_quantity = Number(remained_quantity)
       const func = "buy";
 
-      if (isNaN(buyCount) || buyCount <= 0 || buyCount > remained_quantity ) {
-        alert('购买数量必须为小于库存的正数')
+      if (isNaN(buyCount) || buyCount <= 0 || !Number.isInteger(buyCount) || buyCount > remained_quantity  ) {
+        alert('购买数量必须为小于库存的正整数')
         this.buyCount = 0
         return
       }
@@ -419,7 +427,7 @@ export default {
         width: 10%;
       }
       .record-main {
-        width: 60%;
+        width: 47%;
         .record-name {
           font-size: 20px;
         }
@@ -428,7 +436,7 @@ export default {
         }
       }
       .record-sub {
-        width: 30%;
+        width: 43%;
         font-size: 12px;
         color: #aaa;
         line-height: 20px;
@@ -477,5 +485,17 @@ export default {
       color: rgba(255,255,255,0.8);
     }
   }
+}
+.item-title {
+  width: 65px;
+  font-weight: 550;
+  display: inline-block;
+  margin-bottom: 5px;
+}
+.item-title2 {
+  width: 50px;
+  font-weight: 550;
+  display: inline-block;
+  margin-bottom: 5px;
 }
 </style>
