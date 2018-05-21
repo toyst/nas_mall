@@ -367,7 +367,7 @@ export default {
           }
         })
         .catch(function(err) {
-          console.log(err);
+          alert(JSON.stringify(err));
         });
     },
     handleInputOverflow(isOverflow) {
