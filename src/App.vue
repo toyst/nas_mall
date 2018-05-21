@@ -361,8 +361,8 @@ export default {
         .then(resp => {
           console.log("tx result: " + resp); //resp is a JSON string
           var respObject = JSON.parse(resp);
-          if (respObject.code === 0) {
-            alert("操作成功，请刷新页面");
+          if (respObject) {
+            alert("请等待操作完成后刷新页面");
             clearInterval(this.intervalQuery);
           }
         })
