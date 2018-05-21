@@ -57,7 +57,7 @@
                         </span>{{item.commodity_id}}<br>
                         <span  class="item-title2" style="word-break: break-all">买家 </span>{{item.buyer}}<br>
                         <span  class="item-title2" style="word-break: break-all">
-                          ID
+                          交易ID
                         </span>{{item.id}} <br>                     
                         <span class="item-title2" >时间 </span>{{new Date(item.timestamp * 1000).toLocaleString()}}
                     </div>
